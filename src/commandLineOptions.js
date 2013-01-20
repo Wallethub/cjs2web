@@ -3,7 +3,7 @@
 var optimist = require('optimist');
 
 var options = optimist
-    .usage('Transform CommonJS modules for the web.\nUsage: $0 <entry file>')
+    .usage('Transform CommonJS modules for the web.\nUsage: $0 <module file>')
     .demand([1])
     .options('b', {
         alias: 'basePath',

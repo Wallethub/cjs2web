@@ -4,50 +4,101 @@ Transform CommonJS modules to a web browser suitable format with minimal code ov
 
 ## Motivation
 
-There are many existing tools to transform CommonJS modules to a browser format (examples: [BrowserBuild](https://github.com/LearnBoost/browserbuild), [Browserfiy](https://github.com/substack/node-browserify), [OneJS](https://github.com/azer/onejs), [modulr](https://github.com/tobie/modulr-node), [stitch](https://github.com/sstephenson/stitch)).
-
-Most of these tools emulate the CommonJS environment in the browser and provide features like client side versions of native node.js modules and the __require()__ function.
-
-However if you only want to use the basic CommonJS syntax and don´t need any
-extra features using one of the above will bloat your project´s effective code size.
+There are many existing tools to transform CommonJS modules to a browser format
+(examples: [BrowserBuild](https://github.com/LearnBoost/browserbuild),
+[Browserfiy](https://github.com/substack/node-browserify),
+[OneJS](https://github.com/azer/onejs),
+[modulr](https://github.com/tobie/modulr-node),
+[stitch](https://github.com/sstephenson/stitch)).
+Most of these above emulate the CommonJS environment and provide features
+such as client side versions of native node.js modules and the `require()` function.
+However if you only want to use the basic CommonJS syntax this
+would unnecessarily bloat your project´s effective code size.
 
 ## Features
 
-cjs2web transforms a CommonJS module including all its dependencies to a single script creating objects using the [Module Pattern](http://www.adequatelygood.com/2010/3/JavaScript-Module-Pattern-In-Depth).
-It does **not** provide any CommonJS compliant environment for the browser.
+cjs2web transforms a CommonJS module including all its dependencies to a single script for the browser.
+Modules are transformed to objects using the [Module Pattern](http://www.adequatelygood.com/2010/3/JavaScript-Module-Pattern-In-Depth).
 
-Supported features:
+Supported:
 
-* __require()__ing local modules
-* Using __exports__
-* Using __module.exports__
+* `require()`ing local modules
+* Using `exports`
+* Using `module.exports`
 
-Unsupported features:
+Unsupported (now and probably in the future):
 
-* __require()__ing third party modules
-* __this__ does not refer to  module.exports
-* No __process__ variable
-* No __global__ variable
-* No client side __require()__ function
-
+* `require()`ing third party modules
+* `this` does not refer to  module.exports
+* No `process` variable
+* No `global` variable
+* No client side `require()` function
 
 ## Usage
 
-Basic command line usage:
+### Command line usage
 
-```node cjs2web ./src/index.js > browser.js```
+For most use cases the command line usage should be sufficient.
 
-Code usage:
+```
+node cjs2web <filename>
+
+Options:
+  -b, --basePath  base path to exclude from generated object names         [string]
+  -p, --prefix    prefix to add to the generated object names              [boolean]
+  -c, --combine   combines all transformed modules to one script output    [boolean]
+  -i, --iife      wrap code in an immediately invoked function expression  [boolean]
+```
+
+#### Combining and IIFE
+
+Normally you will want to enable the **combine** option.
+Otherwise the transformation output will not be a single script but raw format for further processing.
+The **iife** can therefore only be enabled in combination with the **combine** option.
+
+#### Prefix
+
+The **prefix** option can be very important. Look at the following example:
+
+```javascript
+// index.js
+var helper = require('./helper');
+helper.doSomething();
+
+// helper.js
+exports.doSomething = function() { /*...*/ };
+```
+
+Without providing a prefix this would result in:
+
+```javascript
+var helper = (function(module) {
+    var exports = module.exports;
+    exports.doSomething = function() { /*...*/ };
+    return module.exports;
+}({exports: {}});
+
+var index = (function(module) {
+    var helper = helper; // this will not work as expected
+    helper.doSomething();
+    return module.exports;
+}({exports: {}});
+```
+
+Recommendation: Always use a non conflicting prefix such as "__module_".
+
+### Code usage
+
+The `transform` function accepts the filename and an optional options object.
+The return value is a Deferred object.
 
 ```javascript
 var cjs2web = require('cjs2web');
 
-cjs2web.transform('./src/index.js').then(function(modules) {
-  // do something
+cjs2web.transform(filename, options).then(function(result) {
+  // do something with result
 });
 ```
-
-
 
 ## Example
 
