@@ -28,13 +28,20 @@ module.exports = function(grunt) {
 
         var jasmine = require('jasmine-node');
         var done = this.async();
+
+        var onComplete = function(runner) {
+            var failedCount = runner.results().failedCount;
+            done(failedCount == 0);
+        };
+
         jasmine.executeSpecsInFolder({
             specFolder: './src',
-            onComplete: done,
+            onComplete: onComplete,
             isVerbose: true,
             showColors: true,
             regExpSpec: /spec\.js/
         });
+
     });
 
     grunt.registerTask('default', 'jasmine concat:license');
