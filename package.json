@@ -1,11 +1,12 @@
 {
     "name": "cjs2web",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Transforms CommonJS modules for the browser with minimal overhead.",
-    "main": "index.js",
+    "main": "./src/index.js",
     "repository": "https://github.com/alexlawrence/typed.git",
     "dependencies": {
-        "q": ">=0.8.12"
+        "q": ">=0.8.12",
+        "optimist": ">=0.3.5"
     },
     "devDependencies": {
         "jasmine-node": ">=1.0.28",

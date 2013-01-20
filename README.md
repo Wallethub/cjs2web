@@ -26,14 +26,14 @@ module.exports = function(a, b) { return a + b; };
 
 Transformation:
 
-```javascript
-var cjs2web = require('cjs2web');
-cjs2web.transform('src/index.js', {basePath: 'src'}).then(cjs2web.reduce).then(console.log);
+```
+node cjs2web ./src/index.js --basePath ./src --iife
 ```
 
 Result:
 
 ```javascript
+(function(){
 var numbers_two = (function(module) {
     module.exports = 2;
     return module.exports;
@@ -53,4 +53,11 @@ var index = (function(module) {
     alert(calculation_sum(numbers_two, numbers_three));
     return module.exports;
 }({exports: {}}));
+}());
+```
+
+Minified result:
+
+```javascript
+(function(){var a={},a=function(a,b){return a+b};alert(a(2,3))})();
 ```
