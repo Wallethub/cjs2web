@@ -1,0 +1,7 @@
+/**
+ * @license
+ * cjs2web - Transforms CommonJS modules for the browser with minimal overhead - version 0.1.0
+ * Copyright 2013, Alex Lawrence
+ * Licensed under the MIT license.
+ * http://www.opensource.org/licenses/MIT
+ */

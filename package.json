@@ -1,0 +1,25 @@
+{
+    "name": "cjs2web",
+    "version": "0.1.0",
+    "description": "Transforms CommonJS modules for the browser with minimal overhead.",
+    "main": "index.js",
+    "repository": "https://github.com/alexlawrence/typed.git",
+    "dependencies": {
+        "q": ">=0.8.12"
+    },
+    "devDependencies": {
+        "jasmine-node": ">=1.0.28",
+        "horaa": ">=0.1.2alpha"
+    },
+    "maintainers": [
+        {
+            "name": "Alex Lawrence",
+            "email": "mail@alex-lawrence.com"
+        }
+    ],
+    "author": "Alex Lawrence",
+    "license": "MIT",
+    "engines" : {
+        "node" : ">=0.8.4"
+    }
+}
