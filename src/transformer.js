@@ -2,7 +2,7 @@ var path = require('path');
 var Q = require('q');
 
 var fileUtil = require('./fileUtils');
-var postProcessing = require('./postProcessing');
+var generateOutput = require('./generateOutput');
 
 var transform = function(filename, options) {
     options = completeOptions(options);
@@ -22,8 +22,13 @@ var transform = function(filename, options) {
                 transformFilesRecursively();
             }
             else {
-                var result = postProcessing.processOutput(modules, options);
-                deferred.resolve(result);
+                var result = generateOutput(modules, options);
+                if (options.output) {
+                    fileUtil.writeFile(options.output, result).then(deferred.resolve);
+                }
+                else {
+                    deferred.resolve(result);
+                }
             }
         });
         whenTransformedNextFile.fail(deferred.reject);

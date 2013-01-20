@@ -25,6 +25,11 @@ var options = optimist
         describe: 'wrap code in an immediately invoked function expression',
         boolean: true
     })
+    .options('o', {
+        alias: 'output',
+        describe: 'filename to write the generated output to',
+        string: true
+    })
     .check(function(options) {
         if (options.iife && !options.combine) {
             throw new Error('iife option cannot be used without combine option')

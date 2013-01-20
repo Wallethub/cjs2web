@@ -17,9 +17,23 @@ var readFile = function(filename) {
     return deferred.promise;
 };
 
+var writeFile = function(filename, content) {
+    var deferred = Q.defer();
+    fs.writeFile(filename, content, 'utf-8', function(error) {
+        if (!error) {
+            deferred.resolve(content);
+        }
+        else {
+            deferred.reject(error);
+        }
+    });
+    return deferred.promise;
+};
+
 var withoutFileExtension = function(filename) {
     return filename.substring(0, filename.length - path.extname(filename).length);
 };
 
 exports.readFile = readFile;
+exports.writeFile = writeFile;
 exports.withoutFileExtension = withoutFileExtension;

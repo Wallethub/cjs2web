@@ -390,7 +390,7 @@ describe('cjs2web.transform', function() {
 
     describe('given a common js module and a module prefix', function() {
 
-        describe('which is placed on top level and requires a module in the same folder', function() {
+        describe('where the module is placed on top level and requires a module in the same folder', function() {
 
             var _modules;
 
@@ -423,7 +423,7 @@ describe('cjs2web.transform', function() {
 
     describe('given a common js module and a base path', function() {
 
-        describe('which is placed directly in the base path', function() {
+        describe('where the module is placed directly in the base path', function() {
 
             var _modules;
 
@@ -449,7 +449,7 @@ describe('cjs2web.transform', function() {
 
         });
 
-        describe('which is placed directly in the base path and requires a module in a subdirectory', function() {
+        describe('where the module is placed directly in the base path and requires a module in a subdirectory', function() {
 
             var _modules;
 
@@ -478,6 +478,92 @@ describe('cjs2web.transform', function() {
                 expect(sub_b).toBeDefined();
             });
 
+        });
+
+    });
+
+    describe('given a common js module with dependencies and the combine option enabled', function() {
+
+        var _output;
+
+        beforeEach(function(done) {
+            fs.hijack('readFile', function(filename, encoding, callback) {
+                if (filename == 'a.js') {
+                    callback(null, 'exports.b = require("./b.js");');
+                }
+                else {
+                    callback(null, 'module.exports = "b";');
+                }
+            });
+            transform('a.js', {combine: true}).then(function(output) {
+                _output = output;
+                done();
+            });
+        });
+
+        it('should return a single string of code', function() {
+            expect(typeof _output).toBe('string');
+        });
+
+        it('should combine all required modules together in the returned code', function() {
+            eval(_output);
+            expect(a.b).toBe('b');
+        });
+
+    });
+
+    describe('given a common js module with dependencies and the combine and iife option enabled', function() {
+
+        var _output;
+
+        beforeEach(function(done) {
+            fs.hijack('readFile', function(filename, encoding, callback) {
+                if (filename == 'a.js') {
+                    callback(null, 'exports.b = require("./b.js");');
+                }
+                else {
+                    callback(null, 'module.exports = "b";');
+                }
+            });
+            transform('a.js', {combine: true, iife: true}).then(function(output) {
+                _output = output;
+                done();
+            });
+        });
+
+        it('should wrap all code inside an iife so no global variables are declared', function() {
+            eval(_output);
+            expect(function() { a; }).toThrow();
+            expect(function() { b; }).toThrow();
+        });
+
+    });
+
+    describe('given a common js module, the combine option enabled and an output filename provided', function() {
+
+        var _spy, _output;
+
+        beforeEach(function(done) {
+            _spy = jasmine.createSpy('writeFile');
+            fs.hijack('readFile', function(filename, encoding, callback) {
+                callback(null, '');
+            });
+            fs.hijack('writeFile', function(filename, content, encoding, callback) {
+                _spy(filename, content);
+                callback();
+            });
+            transform('a.js', {combine: true, output: 'output.js'}).then(function(output) {
+                _output = output;
+                done();
+            });
+        });
+
+        afterEach(function() {
+            fs.restore('writeFile');
+        });
+
+        it('should write', function() {
+            expect(_spy).toHaveBeenCalledWith('output.js', _output);
         });
 
     });

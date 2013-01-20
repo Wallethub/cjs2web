@@ -60,6 +60,7 @@ Options:
   -p, --prefix    prefix to add to the generated object names              [boolean]
   -c, --combine   combines all transformed modules to one script output    [boolean]
   -i, --iife      wrap code in an immediately invoked function expression  [boolean]
+  -o, --output    filename to write the generated output to                [string]
 ```
 
 #### Combining and IIFE
