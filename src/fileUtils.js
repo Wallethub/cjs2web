@@ -2,7 +2,7 @@
 
 var path = require('path');
 var fs = require('fs');
-var Q = require('Q');
+var Q = require('q');
 
 var readFile = function(filename) {
     var deferred = Q.defer();

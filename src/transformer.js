@@ -1,5 +1,5 @@
 var path = require('path');
-var Q = require('Q');
+var Q = require('q');
 
 var fileUtil = require('./fileUtils');
 var postProcessing = require('./postProcessing');
