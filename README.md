@@ -1,5 +1,7 @@
 # cjs2web
 
+[![Build Status](https://travis-ci.org/alexlawrence/cjs2web.png?branch=master)](undefined)
+
 Transforms CommonJS modules for the browser.
 
 ## Example
