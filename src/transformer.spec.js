@@ -8,12 +8,6 @@ describe('cjs2web.transform', function() {
         fs.restore('readFile');
     });
 
-    describe('travis test', function() {
-        it('should fail', function() {
-            expect(false).toBeTruthy();
-        });
-    });
-
     describe('given a common js module', function() {
 
         describe('which is placed at top level and has zero dependencies', function() {
