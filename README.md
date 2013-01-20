@@ -1,6 +1,6 @@
 # cjs2web
 
-Transforms CommonJS modules for the browser with minimal overhead.
+Transforms CommonJS modules for the browser.
 
 ## Example
 
@@ -27,7 +27,7 @@ module.exports = function(a, b) { return a + b; };
 Transformation:
 
 ```
-node cjs2web ./src/index.js --basePath ./src --iife
+node cjs2web ./src/index.js --basePath ./src --combine --iife
 ```
 
 Result:

@@ -2,6 +2,7 @@ var path = require('path');
 var Q = require('Q');
 
 var fileUtil = require('./fileUtils');
+var postProcessing = require('./postProcessing');
 
 var transform = function(filename, options) {
     options = completeOptions(options);
@@ -9,19 +10,20 @@ var transform = function(filename, options) {
     var modules = [], modulesToProcess = [getModuleName(filename, options.basePath)], modulesProcessed = [];
     var transformFilesRecursively = function() {
         var currentModule = modulesToProcess.shift();
-        var whenTransformedNextFile = transformFile(currentModule, options);
+        var whenTransformedNextFile = transformSingleFile(currentModule, options);
         whenTransformedNextFile.then(function(module) {
             modules.unshift(module);
             modulesProcessed.push(currentModule);
             var dependentFilesToProcess = module.dependencies.filter(function(name) {
-                return !inArray(modulesProcessed.concat(modulesToProcess), name);
+                return modulesProcessed.concat(modulesToProcess).indexOf(name) == -1;
             });
             modulesToProcess = modulesToProcess.concat(dependentFilesToProcess);
             if (modulesToProcess.length > 0) {
                 transformFilesRecursively();
             }
             else {
-                deferred.resolve(modules);
+                var result = postProcessing.processOutput(modules, options);
+                deferred.resolve(result);
             }
         });
         whenTransformedNextFile.fail(deferred.reject);
@@ -37,8 +39,9 @@ var completeOptions = function(options) {
     return options;
 };
 
-var transformFile = function(moduleName, options) {
-    var fileTransformed = fileUtil.readFile(path.join(options.basePath, moduleName) + '.js').then(function(content) {
+var transformSingleFile = function(moduleName, options) {
+    var filename = path.join(options.basePath, moduleName) + '.js';
+    var fileTransformed = fileUtil.readFile(filename).then(function(content) {
         var module = {name: moduleName, code: content};
         replaceAndLogDependencies(module, options);
         wrapModuleCode(module, options);
@@ -65,19 +68,19 @@ var replaceAndLogDependencies = function(module, options) {
 var wrapModuleCode = function(module, options) {
     var objectName = getSafeObjectName(module.name, options.prefix);
     if (module.code != null) module.code += '\n';
-    var variableDefinitions = exportsRegex.test(module.code) ? templates.exportsDefinition : '';
+    var variableDefinitions = exportsRegex.test(module.code) ? codeTemplates.exportsDefinition : '';
     module.code = 'var ' + objectName + ' = ' +
-        templates.wrapperStart +
+        codeTemplates.wrapperStart +
         variableDefinitions +
         module.code + '\n' +
-        templates.returnValue +
-        templates.wrapperEnd;
+        codeTemplates.returnValue +
+        codeTemplates.wrapperEnd;
 };
 
 var getModuleName = function(filename, basePath) {
-    var moduleName = normalizeSlashes(filename);
+    var moduleName = unifySlashes(filename);
     if (basePath) {
-        moduleName = moduleName.replace(new RegExp('^' + normalizeSlashes(basePath)), '');;
+        moduleName = moduleName.replace(new RegExp('^' + unifySlashes(basePath)), '');
     }
     moduleName = moduleName.replace(/^\.?\//, '');
     moduleName = fileUtil.withoutFileExtension(moduleName);
@@ -88,15 +91,11 @@ var getSafeObjectName = function(moduleName, prefix) {
     return prefix + moduleName.replace(/\//g, '_');
 };
 
-var normalizeSlashes = function(input) {
+var unifySlashes = function(input) {
     return input.replace(/\\/g, '/');
 };
 
-var inArray = function(array, value) {
-    return array.indexOf(value) > -1;
-};
-
-var templates = {
+var codeTemplates = {
     wrapperStart: '(function(module) {\n',
     exportsDefinition: 'var exports = module.exports;\n',
     returnValue: 'return module.exports;\n',
@@ -104,6 +103,6 @@ var templates = {
 };
 
 var requireRegex = /require\s*\(\s*(('(.*?)')|("(.*?)"))\s*\)/g;
-var exportsRegex = /exports((\.[a-zA-Z_][a-zA-Z1-9_]*)|(\[.*?\]))/g;
+var exportsRegex = /exports(\.|\[).*/i;
 
 exports.transform = transform;
