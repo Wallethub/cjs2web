@@ -30,10 +30,21 @@ var writeFile = function(filename, content) {
     return deferred.promise;
 };
 
+var watchFiles = function(filenames) {
+    var deferred = Q.defer();
+    filenames.forEach(function(filename) {
+        fs.watch(filename, function() {
+            deferred.resolve(filename);
+        });
+    });
+    return deferred.promise;
+};
+
 var withoutFileExtension = function(filename) {
     return filename.substring(0, filename.length - path.extname(filename).length);
 };
 
 exports.readFile = readFile;
 exports.writeFile = writeFile;
+exports.watchFiles = watchFiles;
 exports.withoutFileExtension = withoutFileExtension;

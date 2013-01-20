@@ -13,7 +13,7 @@ var options = optimist
     .options('p', {
         alias: 'prefix',
         describe: 'prefix to add to the generated object names',
-        boolean: true
+        string: true
     })
     .options('c', {
         alias: 'combine',
@@ -29,6 +29,11 @@ var options = optimist
         alias: 'output',
         describe: 'filename to write the generated output to',
         string: true
+    })
+    .options('w', {
+        alias: 'watch',
+        describe: 'watch transformed files for change and automatically re-execute',
+        boolean: true
     })
     .check(function(options) {
         if (options.iife && !options.combine) {

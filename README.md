@@ -56,11 +56,12 @@ For most projects the command line usage should be sufficient.
 node cjs2web <filename>
 
 Options:
-  -b, --basePath  base path to exclude from generated object names         [string]
-  -p, --prefix    prefix to add to the generated object names              [boolean]
-  -c, --combine   combines all transformed modules to one script output    [boolean]
-  -i, --iife      wrap code in an immediately invoked function expression  [boolean]
-  -o, --output    filename to write the generated output to                [string]
+  -b, --basePath  base path to exclude from generated object names                 [string]
+  -p, --prefix    prefix to add to the generated object names                      [string]
+  -c, --combine   combines all transformed modules to one script output            [boolean]
+  -i, --iife      wrap code in an immediately invoked function expression          [boolean]
+  -o, --output    filename to write the generated output to                        [string]
+  -w, --watch     watch transformed files for change and automatically re-execute  [boolean]
 ```
 
 #### Combining and IIFE
@@ -101,6 +102,15 @@ The helper variable inside the *index* object hides the variable from the outer 
 and therefore results in assigning the value of the local variable to itself (which is *undefined*).
 
 **Recommendation**: Always use a distinct and non conflicting prefix such as ***module_*** or ***cjs_***.
+
+#### Output
+
+When an *output* name the result is written to the disk and not to the standard output.
+
+#### Watch
+
+The *watch* option causes cjs2web to watch the main module and all its dependencies and
+re-execute the transformation whenever one of these files changes.
 
 ### Code usage
 
