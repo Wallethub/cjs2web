@@ -43,7 +43,7 @@ This results in code which contains almost no overhead and can also be minified 
 ## Installation
 
 ```
-npm install cjs2web
+npm install cjs2web -g
 ```
 
 ## Usage
@@ -53,7 +53,7 @@ npm install cjs2web
 For most projects the command line usage should be sufficient.
 
 ```
-node cjs2web <filename>
+cjs2web <filename>
 
 Options:
   -b, --basePath  base path to exclude from generated object names                 [string]
@@ -135,7 +135,7 @@ CommonJS code:
 var two = require('./numbers/two');
 var three = require('./numbers/three');
 var sum = require('./calculation/sum');
-alert(sum(two, three));
+console.log(sum(two, three));
 // src/numbers/two.js
 module.exports = 2;
 // src/numbers/three.js
@@ -173,7 +173,7 @@ var index = (function(module) {
     var two = cjs_numbers_two;
     var three = cjs_numbers_three;
     var sum = cjs_calculation_sum;
-    alert(sum(cjs_numbers_two, cjs_numbers_three));
+    console.log(sum(cjs_numbers_two, cjs_numbers_three));
     return module.exports;
 }({exports: {}}));
 }());
@@ -182,11 +182,11 @@ var index = (function(module) {
 Minified result using Closure Compiler with *Simple Optimizations*:
 
 ```javascript
-(function(){var a={},a=function(a,b){return a+b};alert(a(2,3))})();
+(function(){var a={},a=function(a,b){return a+b};console.log(a(2,3))})();
 ```
 
 Minified result using Closure Compiler with *Advanced Optimizations*:
 
 ```javascript
-alert(5);
+console.log(5);
 ```
