@@ -10,29 +10,23 @@ There are many existing tools to transform CommonJS modules to a browser format
 [OneJS](https://github.com/azer/onejs),
 [modulr](https://github.com/tobie/modulr-node),
 [stitch](https://github.com/sstephenson/stitch)).
-Most of the above emulate the CommonJS environment and provide features
-öole client side versions of native node.js modules and the `require()`.
+Most of the them emulate the CommonJS environment and provide features
+like client side versions of native node.js modules and `require()`.
 
-However if you only want to use the basic CommonJS syntax this
-would unnecessarily bloat your project´s effective code size.
-
-## Installation
-
-```
-npm install cjs2web
-```
+However if you want to only use the basic CommonJS syntax in your own codebase
+such tools unnecessarily bloat your project´s effective code size.
 
 ## Features
 
 cjs2web transforms a CommonJS module and all its dependencies to a single script for the browser
 using the [Module Pattern](http://www.adequatelygood.com/2010/3/JavaScript-Module-Pattern-In-Depth).
-This results in JavaScript code with almost no overhead which can also be minified very well.
+This results in code which contains almost no overhead and can also be minified very well.
 
 **Supported features**:
 
 * Using `require()` for local modules
 * Assigning members to `exports`
-* Assigning `module.exports`
+* Assigning values to `module.exports`
 
 **Unsupported features** (now and probably in the future):
 
@@ -42,9 +36,15 @@ This results in JavaScript code with almost no overhead which can also be minifi
 * `global` does not exist
 * Client side `require()` does not exist
 
-**Roadmap**:
+**Roadmap for future features**:
 
 * Support to use `require()` for browser globals such *window* and *document*
+
+## Installation
+
+```
+npm install cjs2web
+```
 
 ## Usage
 
@@ -65,22 +65,23 @@ Options:
 #### Combining and IIFE
 
 Normally you will want to enable the *combine* option.
-Otherwise the transformation output will not be a string of code but raw module format.
-The *iife* options can only be enabled in combination with *combine*.
+Otherwise the transformation output will not be a string of code but raw module data.
+The *iife* option wraps your code to reduce global variables and
+can only be enabled in combination with *combine*.
 
 #### Prefix
 
-The *prefix* is very important. Consider the following example:
+The *prefix* option is very important. Consider the following example:
 
 ```javascript
-// index.js
+// == index.js ==
 var helper = require('./helper');
 helper.doSomething();
-// helper.js
+// == helper.js ==
 exports.doSomething = function() { /*...*/ };
 ```
 
-Without providing a *prefix* a transformation of the above would result in:
+Without providing a *prefix* the transformation of the above would result in:
 
 ```javascript
 var helper = (function(module) {
@@ -89,18 +90,22 @@ var helper = (function(module) {
     return module.exports;
 }({exports: {}});
 var index = (function(module) {
-    var helper = helper; // this will not work as expected
+    var helper = helper; // THIS WILL NOT WORK AS EXPECTED
     helper.doSomething();
     return module.exports;
 }({exports: {}});
 ```
 
-The helper variable declaration inside the *index* object hides the variable from the outer scope
-and therefore results in assigning the value of the local variable to itself (which is undefined).
+The helper variable inside the *index* object hides the variable from the outer scope
+and therefore results in assigning the value of the local variable to itself (which is *undefined*).
 
-**Recommendation**: Always use a distinct and non conflicting prefix such as *module_* or *cjs_*.
+**Recommendation**: Always use a distinct and non conflicting prefix such as ***module_*** or ***cjs_***.
 
 ### Code usage
+
+`transform` function accepts the filename and an optional options object.
+Option names are the same as the explicit parameter names of the command line tool.
+The return value is a Deferred object.
 
 ```javascript
 var cjs2web = require('cjs2web');
@@ -110,11 +115,7 @@ cjs2web.transform(filename, options).then(function(result) {
 });
 ```
 
-`transform` function accepts the filename and an optional options object.
-The option names are the same as the explicit parameter names of the command line tool.
-The return value is a Deferred object.
-
-## Advanced example
+## Transformation example
 
 CommonJS code:
 
