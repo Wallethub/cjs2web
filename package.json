@@ -1,7 +1,7 @@
 {
     "name": "cjs2web",
     "version": "0.3.0",
-    "description": "Transforms CommonJS modules for the browser",
+    "description": "Transform CommonJS modules to a web browser suitable format",
     "maintainers": [
         {
             "name": "Alex Lawrence",
