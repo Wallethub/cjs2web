@@ -10,35 +10,47 @@ There are many existing tools to transform CommonJS modules to a browser format
 [OneJS](https://github.com/azer/onejs),
 [modulr](https://github.com/tobie/modulr-node),
 [stitch](https://github.com/sstephenson/stitch)).
-Most of these above emulate the CommonJS environment and provide features
-such as client side versions of native node.js modules and the `require()` function.
+Most of the above emulate the CommonJS environment and provide features
+öole client side versions of native node.js modules and the `require()`.
+
 However if you only want to use the basic CommonJS syntax this
 would unnecessarily bloat your project´s effective code size.
 
+## Installation
+
+```
+npm install cjs2web
+```
+
 ## Features
 
-cjs2web transforms a CommonJS module including all its dependencies to a single script for the browser.
-Modules are transformed to objects using the [Module Pattern](http://www.adequatelygood.com/2010/3/JavaScript-Module-Pattern-In-Depth).
+cjs2web transforms a CommonJS module and all its dependencies to a single script for the browser
+using the [Module Pattern](http://www.adequatelygood.com/2010/3/JavaScript-Module-Pattern-In-Depth).
+This results in JavaScript code with almost no overhead which can also be minified very well.
 
-Supported:
+**Supported features**:
 
-* `require()`ing local modules
-* Using `exports`
-* Using `module.exports`
+* Using `require()` for local modules
+* Assigning members to `exports`
+* Assigning `module.exports`
 
-Unsupported (now and probably in the future):
+**Unsupported features** (now and probably in the future):
 
-* `require()`ing third party modules
-* `this` does not refer to  module.exports
-* No `process` variable
-* No `global` variable
-* No client side `require()` function
+* Using `require()` for third party modules
+* `this` refers to window, not to `module.exports`
+* `process` does not exist
+* `global` does not exist
+* Client side `require()` does not exist
+
+**Roadmap**:
+
+* Support to use `require()` for browser globals such *window* and *document*
 
 ## Usage
 
 ### Command line usage
 
-For most use cases the command line usage should be sufficient.
+For most projects the command line usage should be sufficient.
 
 ```
 node cjs2web <filename>
@@ -52,24 +64,23 @@ Options:
 
 #### Combining and IIFE
 
-Normally you will want to enable the **combine** option.
-Otherwise the transformation output will not be a single script but raw format for further processing.
-The **iife** can therefore only be enabled in combination with the **combine** option.
+Normally you will want to enable the *combine* option.
+Otherwise the transformation output will not be a string of code but raw module format.
+The *iife* options can only be enabled in combination with *combine*.
 
 #### Prefix
 
-The **prefix** option can be very important. Look at the following example:
+The *prefix* is very important. Consider the following example:
 
 ```javascript
 // index.js
 var helper = require('./helper');
 helper.doSomething();
-
 // helper.js
 exports.doSomething = function() { /*...*/ };
 ```
 
-Without providing a prefix this would result in:
+Without providing a *prefix* a transformation of the above would result in:
 
 ```javascript
 var helper = (function(module) {
@@ -77,7 +88,6 @@ var helper = (function(module) {
     exports.doSomething = function() { /*...*/ };
     return module.exports;
 }({exports: {}});
-
 var index = (function(module) {
     var helper = helper; // this will not work as expected
     helper.doSomething();
@@ -85,12 +95,12 @@ var index = (function(module) {
 }({exports: {}});
 ```
 
-Recommendation: Always use a non conflicting prefix such as "__module_".
+The helper variable declaration inside the *index* object hides the variable from the outer scope
+and therefore results in assigning the value of the local variable to itself (which is undefined).
+
+**Recommendation**: Always use a distinct and non conflicting prefix such as *module_* or *cjs_*.
 
 ### Code usage
-
-The `transform` function accepts the filename and an optional options object.
-The return value is a Deferred object.
 
 ```javascript
 var cjs2web = require('cjs2web');
@@ -100,62 +110,71 @@ cjs2web.transform(filename, options).then(function(result) {
 });
 ```
 
-## Example
+`transform` function accepts the filename and an optional options object.
+The option names are the same as the explicit parameter names of the command line tool.
+The return value is a Deferred object.
 
-Source:
+## Advanced example
+
+CommonJS code:
 
 ```javascript
 // src/index.js
 var two = require('./numbers/two');
 var three = require('./numbers/three');
 var sum = require('./calculation/sum');
-
 alert(sum(two, three));
-
 // src/numbers/two.js
 module.exports = 2;
-
 // src/numbers/three.js
 module.exports = 3;
-
 // src/calculation/sum.js
 module.exports = function(a, b) { return a + b; };
 ```
 
-Transformation:
+Transformation call:
 
 ```
-node cjs2web ./src/index.js --basePath ./src --combine --iife
+node cjs2web ./src/index.js --basePath ./src --prefix cjs_ --combine --iife
 ```
 
-Result:
+Transformation result:
 
 ```javascript
 (function(){
-var numbers_two = (function(module) {
+var cjs_numbers_two = (function(module) {
     module.exports = 2;
     return module.exports;
 }({exports: {}}));
 
-var numbers_three = (function(module) {
+var cjs_numbers_three = (function(module) {
     module.exports = 3;
     return module.exports;
 }({exports: {}}));
 
-var calculation_sum = (function(module) {
+var cjs_calculation_sum = (function(module) {
     module.exports = function(a, b) { return a + b; };
     return module.exports;
 }({exports: {}}));
 
 var index = (function(module) {
-    alert(calculation_sum(numbers_two, numbers_three));
+    var two = cjs_numbers_two;
+    var three = cjs_numbers_three;
+    var sum = cjs_calculation_sum;
+    alert(sum(cjs_numbers_two, cjs_numbers_three));
     return module.exports;
 }({exports: {}}));
 }());
 ```
 
-Minified result:
+Minified result using Closure Compiler with *Simple Optimizations*:
 
 ```javascript
 (function(){var a={},a=function(a,b){return a+b};alert(a(2,3))})();
+```
+
+Minified result using Closure Compiler with *Advanced Optimizations*:
+
+```javascript
+alert(5);
 ```
