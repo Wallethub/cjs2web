@@ -10,7 +10,7 @@
     ],
     "author": "Alex Lawrence",
     "license": "MIT",
-    "repository": "https://github.com/alexlawrence/typed.git",
+    "repository": "https://github.com/alexlawrence/cjs2web.git",
     "main": "./src/index.js",
     "scripts": {
         "test": "grunt jasmine"
