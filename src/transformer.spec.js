@@ -28,11 +28,19 @@ describe('cjs2web.transform', function() {
                 expect(_modules.length).toBe(1);
             });
 
-            it('should contain an entry with the correct module name', function() {
-                expect(_modules[0].name).toBe('a');
+            it('should return the correct file name', function() {
+                expect(_modules[0].fileName).toBe('a.js');
             });
 
-            it('should contain an entry with code creating an object named after the file name', function() {
+            it('should return the correct module name', function() {
+                expect(_modules[0].moduleName).toBe('a');
+            });
+
+            it('should return the correct object name', function() {
+                expect(_modules[0].objectName).toBe('a');
+            });
+
+            it('should return code creating a correctly named object', function() {
                 eval(_modules[0].code);
                 expect(a).toBeDefined();
             });
@@ -59,17 +67,49 @@ describe('cjs2web.transform', function() {
 
             });
 
-            it('should contain an entry with the correct module name including the path', function() {
-                expect(_modules[0].name).toBe('path/to/a');
+            it('should return the correct file name', function() {
+                expect(_modules[0].fileName).toBe('path/to/a.js');
             });
 
-            it('should contain an entry with code creating an object named after the file location', function() {
+            it('should return the correct module name including the path with unified slashes', function() {
+                expect(_modules[0].moduleName).toBe('path/to/a');
+            });
+
+            it('should return the correct object name where slashes are replaced with underscores', function() {
+                expect(_modules[0].objectName).toBe('path_to_a');
+            });
+
+            it('should return code creating a correctly named object', function() {
                 eval(_modules[0].code);
                 expect(path_to_a).toBeDefined();
             });
 
         });
 
+        describe('which has dots in its file name', function() {
+
+            var _modules;
+
+            beforeEach(function(done) {
+                fs.hijack('readFile', function(filename, encoding, callback) {
+                    callback(null, '');
+                });
+                transform('foo.bar.js').then(function(modules) {
+                    _modules = modules;
+                    done();
+                });
+            });
+
+            it('should return the correct object name where dots are replaced with $', function() {
+                expect(_modules[0].objectName).toBe('foo$bar');
+            });
+
+            it('should return code creating a correctly named object', function() {
+                eval(_modules[0].code);
+                expect(foo$bar).toBeDefined();
+            });
+
+        });
 
         describe('which contains a private (string) variable', function() {
 
@@ -85,7 +125,7 @@ describe('cjs2web.transform', function() {
                 });
             });
 
-            it('should return an entry with code containing the variable declaration', function() {
+            it('should return code containing the variable declaration', function() {
                 expect(_modules[0].code).toContain('var hidden = "Hello module";');
             });
 
@@ -110,7 +150,7 @@ describe('cjs2web.transform', function() {
                 });
             });
 
-            it('should return an entry with code exposing these properties on the created object', function() {
+            it('should return code exposing these properties on the created object', function() {
                 eval(_modules[0].code);
                 expect(typeof a.a).toBe('boolean');
                 expect(typeof a.b).toBe('number');
@@ -133,7 +173,7 @@ describe('cjs2web.transform', function() {
                 });
             });
 
-            it('should return an entry with code exposing these properties on the created object', function() {
+            it('should return code exposing these properties on the created object', function() {
                 eval(_modules[0].code);
                 expect(typeof a.a).toBe('boolean');
                 expect(typeof a.b).toBe('number');
@@ -163,15 +203,15 @@ describe('cjs2web.transform', function() {
             });
 
             it('should return a list containing the initial module at the second index', function() {
-                expect(_modules[1].name).toBe('a');
+                expect(_modules[1].moduleName).toBe('a');
             });
 
-            it('should contain a list of dependencies without file extensions in the entry for the initial module', function() {
-                expect(_modules[1].dependencies[0]).toBe('b');
+            it('should return a list of dependent files without in the entry for the initial module', function() {
+                expect(_modules[1].dependentFiles[0]).toBe('b.js');
             });
 
             it('should return a list containing the required module at the first index', function() {
-                expect(_modules[0].name).toBe('b');
+                expect(_modules[0].moduleName).toBe('b');
             });
 
             it('should replace the require() call with the correct module object identifier', function() {
@@ -198,6 +238,14 @@ describe('cjs2web.transform', function() {
                 });
             });
 
+            it('should return the correct file name for the first defined module', function() {
+                expect(_modules[1].fileName).toBe('path/to/a.js');
+            });
+
+            it('should return the correct file name for the second defined module', function() {
+                expect(_modules[0].fileName).toBe('path/to/b.js');
+            });
+
             it('should replace the require() call with the correct module object identifier including the path', function() {
                 var path_to_b = {};
                 eval(_modules[1].code);
@@ -220,6 +268,14 @@ describe('cjs2web.transform', function() {
                     _modules = modules;
                     done();
                 });
+            });
+
+            it('should return the correct file name for the first defined module', function() {
+                expect(_modules[1].fileName).toBe('sub/a.js');
+            });
+
+            it('should return the correct file name for the second defined module', function() {
+                expect(_modules[0].fileName).toBe('b.js');
             });
 
             it('should replace require() with the correct module object identifier including the path', function() {
@@ -256,8 +312,12 @@ describe('cjs2web.transform', function() {
                 expect(_modules.length).toBe(3);
             });
 
+            it('should return the correct file name for the third defined module', function() {
+                expect(_modules[0].fileName).toBe('sub/sub/c.js');
+            });
+
             it('should contain the last required module as first entry with the correct module id', function() {
-                expect(_modules[0].name).toBe('sub/sub/c');
+                expect(_modules[0].moduleName).toBe('sub/sub/c');
             });
 
         });
@@ -278,8 +338,12 @@ describe('cjs2web.transform', function() {
                 });
             });
 
+            it('should return the correct file name including file extension for the required module', function() {
+                expect(_modules[0].fileName).toBe('b.js');
+            });
+
             it('should be able to load the dependency correctly', function() {
-                expect(_modules[0].name).toBe('b');
+                expect(_modules[0].moduleName).toBe('b');
                 eval(_modules[0].code);
                 expect(b).toBe('b');
             });
@@ -361,9 +425,9 @@ describe('cjs2web.transform', function() {
             });
 
             it('should return a list of modules in the correct optimized order', function() {
-                expect(_modules[0].name).toBe('c');
-                expect(_modules[1].name).toBe('b');
-                expect(_modules[2].name).toBe('a');
+                expect(_modules[0].moduleName).toBe('c');
+                expect(_modules[1].moduleName).toBe('b');
+                expect(_modules[2].moduleName).toBe('a');
             });
         });
 
@@ -438,7 +502,7 @@ describe('cjs2web.transform', function() {
             });
 
             it('should not add the base path to the module name', function() {
-                expect(_modules[0].name).toBe('a');
+                expect(_modules[0].moduleName).toBe('a');
             });
 
             it('should not add the base path to the module name', function() {
@@ -469,7 +533,7 @@ describe('cjs2web.transform', function() {
             });
 
             it('should not add the base path to the required module´s name', function() {
-                expect(_modules[0].name).toBe('sub/b');
+                expect(_modules[0].moduleName).toBe('sub/b');
             });
 
             it('should not add the base path to the required module´s object name', function() {
@@ -562,7 +626,7 @@ describe('cjs2web.transform', function() {
             fs.restore('writeFile');
         });
 
-        it('should write', function() {
+        it('should write the file to the disk', function() {
             expect(_spy).toHaveBeenCalledWith('output.js', _output);
         });
 

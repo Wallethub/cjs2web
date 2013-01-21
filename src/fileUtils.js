@@ -4,9 +4,9 @@ var path = require('path');
 var fs = require('fs');
 var Q = require('q');
 
-var readFile = function(filename) {
+var readFile = function(fileName) {
     var deferred = Q.defer();
-    fs.readFile(filename, 'utf-8', function(error, content) {
+    fs.readFile(fileName, 'utf-8', function(error, content) {
         if (!error) {
             deferred.resolve(content);
         }
@@ -17,9 +17,9 @@ var readFile = function(filename) {
     return deferred.promise;
 };
 
-var writeFile = function(filename, content) {
+var writeFile = function(fileName, content) {
     var deferred = Q.defer();
-    fs.writeFile(filename, content, 'utf-8', function(error) {
+    fs.writeFile(fileName, content, 'utf-8', function(error) {
         if (!error) {
             deferred.resolve(content);
         }
@@ -30,18 +30,18 @@ var writeFile = function(filename, content) {
     return deferred.promise;
 };
 
-var watchFiles = function(filenames) {
+var watchFiles = function(fileNames) {
     var deferred = Q.defer();
-    filenames.forEach(function(filename) {
-        fs.watch(filename, function() {
-            deferred.resolve(filename);
+    fileNames.forEach(function(fileName) {
+        fs.watch(fileName, function() {
+            deferred.resolve(fileName);
         });
     });
     return deferred.promise;
 };
 
-var withoutFileExtension = function(filename) {
-    return filename.substring(0, filename.length - path.extname(filename).length);
+var withoutFileExtension = function(fileName) {
+    return fileName.substring(0, fileName.length - path.extname(fileName).length);
 };
 
 exports.readFile = readFile;

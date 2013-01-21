@@ -13,7 +13,7 @@ There are many existing tools to transform CommonJS modules to a browser format
 Most of the them emulate the CommonJS environment and provide features
 like client side versions of native node.js modules and `require()`.
 
-However if you want to only use the basic CommonJS syntax in your own codebase
+However if you only want to use the basic CommonJS syntax
 such tools unnecessarily bloat your project´s effective code size.
 
 ## Features
@@ -31,6 +31,7 @@ This results in code which contains almost no overhead and can also be minified 
 **Unsupported features** (now and probably in the future):
 
 * Using `require()` for third party modules
+* Using `require()` for files which do not have a "js" extension
 * `this` refers to window, not to `module.exports`
 * `process` does not exist
 * `global` does not exist
@@ -105,7 +106,7 @@ and therefore results in assigning the value of the local variable to itself (wh
 
 #### Output
 
-When an *output* name the result is written to the disk and not to the standard output.
+When an *output* name is provided the result is written to the disk and not to the standard output.
 
 #### Watch
 
@@ -114,7 +115,7 @@ re-execute the transformation whenever one of these files changes.
 
 ### Code usage
 
-`transform` function accepts the filename and an optional options object.
+The `transform` function accepts the filename and an optional options object.
 Option names are the same as the explicit parameter names of the command line tool.
 The return value is a Deferred object.
 
