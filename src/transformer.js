@@ -15,7 +15,8 @@ var transform = function(fileName, options) {
         transformedNextFile.then(function(module) {
             modules.unshift(module);
             filesProcessed.push(currentFile);
-            var dependentFilesToProcess = module.dependentFiles.filter(function(name) {
+            var dependentFiles = module.dependencies.map(function(x) { return x.fileName; });
+            var dependentFilesToProcess = dependentFiles.filter(function(name) {
                 return filesProcessed.concat(filesToProcess).indexOf(name) == -1;
             });
             filesToProcess = filesToProcess.concat(dependentFilesToProcess);
@@ -53,7 +54,7 @@ var prepareBasePath = function(basePath) {
 
 var transformSingleFile = function(fileName, options) {
     var fileTransformed = fileUtil.readFile(fileName).then(function(code) {
-        var module = createModuleEntry(fileName, options, code);
+        var module = createModuleEntry(fileName, code, options);
         replaceAndLogDependencies(module, options);
         wrapModuleCode(module, options);
         return module;
@@ -61,7 +62,7 @@ var transformSingleFile = function(fileName, options) {
     return fileTransformed;
 };
 
-var createModuleEntry = function(fileName, options, code) {
+var createModuleEntry = function(fileName, code, options) {
     var module = {};
     module.fileName = getUnifiedFileName(fileName);
     module.moduleName = getModuleName(module.fileName, options.basePath);
@@ -96,16 +97,23 @@ var getSafeObjectName = function(moduleName, prefix) {
 
 var replaceAndLogDependencies = function(module, options) {
     var folder = path.dirname(module.fileName);
-    module.dependentFiles = module.dependentFiles || [];
+    module.dependencies = module.dependencies || [];
     module.code = module.code.replace(requireRegex, function() {
         var relativeFileName = arguments[1].substring(1, arguments[1].length - 1);
-        var dependency = createModuleEntry(path.join(folder, relativeFileName), options);
+        var dependency = createModuleEntry(
+            path.join(folder, relativeFileName), '[reference]', options);
         if (dependency.objectName.indexOf('.') > -1) {
             throw new Error('cannot transform module id into object name: ', relativeFileName);
         }
-        module.dependentFiles.push(dependency.fileName);
+        if (!dependencyAlreadyAdded(module.dependencies, dependency)) {
+            module.dependencies.push(dependency);
+        }
         return dependency.objectName;
     });
+};
+
+var dependencyAlreadyAdded = function(dependencies, dependency) {
+    return dependencies.some(function(x) { return x.fileName == dependency.fileName; });
 };
 
 var wrapModuleCode = function(module, options) {

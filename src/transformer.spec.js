@@ -10,7 +10,7 @@ describe('cjs2web.transform', function() {
 
     describe('given a common js module', function() {
 
-        describe('which is placed at top level and has zero dependencies', function() {
+        describe('which is placed at top level and has no dependencies', function() {
 
             var _modules;
 
@@ -206,11 +206,13 @@ describe('cjs2web.transform', function() {
                 expect(_modules[1].moduleName).toBe('a');
             });
 
-            it('should return a list of dependent files without in the entry for the initial module', function() {
-                expect(_modules[1].dependentFiles[0]).toBe('b.js');
+            it('should return a list of the correct dependency data for the first defined module', function() {
+                expect(_modules[1].dependencies[0].fileName).toBe('b.js');
+                expect(_modules[1].dependencies[0].moduleName).toBe('b');
+                expect(_modules[1].dependencies[0].objectName).toBe('b');
             });
 
-            it('should return a list containing the required module at the first index', function() {
+            it('should return a list containing the second defined module at the first index', function() {
                 expect(_modules[0].moduleName).toBe('b');
             });
 
@@ -241,6 +243,13 @@ describe('cjs2web.transform', function() {
             it('should return the correct file name for the first defined module', function() {
                 expect(_modules[1].fileName).toBe('path/to/a.js');
             });
+
+            it('should return a list of the correct dependency data for the first defined module', function() {
+                expect(_modules[1].dependencies[0].fileName).toBe('path/to/b.js');
+                expect(_modules[1].dependencies[0].moduleName).toBe('path/to/b');
+                expect(_modules[1].dependencies[0].objectName).toBe('path_to_b');
+            });
+
 
             it('should return the correct file name for the second defined module', function() {
                 expect(_modules[0].fileName).toBe('path/to/b.js');
@@ -448,6 +457,28 @@ describe('cjs2web.transform', function() {
             it('should not contain declaration of the exports variable', function() {
                 expect(_modules[0].code).not.toContain('var exports = module.exports;');
             });
+        });
+
+        describe('which requires the same module twice', function() {
+
+            var _modules;
+
+            beforeEach(function(done) {
+                fs.hijack('readFile', function(filename, encoding, callback) {
+                    callback(null, 'require("./b.js");require("./b.js");');
+                });
+                transform('a.js').then(function(modules) {
+                    _modules = modules;
+                    done();
+                });
+            });
+
+            it('should return a list of modules with each required module contained only once', function() {
+                expect(_modules.length).toBe(2);
+                expect(_modules[0].moduleName).toBe('b');
+                expect(_modules[1].moduleName).toBe('a');
+            });
+
         });
 
     });
