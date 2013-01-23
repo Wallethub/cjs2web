@@ -440,6 +440,41 @@ describe('cjs2web.transform', function() {
             });
         });
 
+        xdescribe('which requires two modules of which the second required also requires the first required', function() {
+
+            var _modules;
+
+            beforeEach(function(done) {
+                fs.hijack('readFile', function(filename, encoding, callback) {
+                    switch (filename){
+                        case 'a.js':
+                            callback(null, 'require("./b.js");require("./c.js");');
+                            break;
+                        case 'b.js':
+                            callback(null, '');
+                            break;
+                        case 'c.js':
+                            callback(null, 'require("./b.js");');
+                            break;
+                    }
+                });
+                transform('a.js').then(function(modules) {
+                    _modules = modules;
+                    done();
+                });
+            });
+
+            it('should return a list of modules with each required module contained only once', function() {
+                expect(_modules.length).toBe(3);
+            });
+
+            it('should return a list of modules in the correct optimized order', function() {
+                expect(_modules[0].moduleName).toBe('b');
+                expect(_modules[1].moduleName).toBe('c');
+                expect(_modules[2].moduleName).toBe('a');
+            });
+        });
+
         describe('which does not make use of the exports object', function() {
 
             var _modules;
