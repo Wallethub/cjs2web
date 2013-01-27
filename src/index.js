@@ -5,12 +5,12 @@ var transformer = require('./transformer');
 
 if (require.main == module) {
     var options = require('./commandLineOptions.js');
+    options.cli = true;
     var filename = options._[0];
     if (filename) {
-        transformer.transform(filename, options).then(function(output) {
-            if (!options.output) {
-                console.log(output);
-            }
+        var transformed = transformer.transform(filename, options);
+        transformed.fail(function(error) {
+            console.log(error);
         });
     }
 }

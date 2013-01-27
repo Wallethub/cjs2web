@@ -1,10 +1,10 @@
 var path = require('path');
 
-var fsUtils = require('./filesystemUtils');
+var filesystemUtils = require('./filesystemUtils');
 
 var createModule = function(fileName, code, options) {
     var module = {};
-    module.fileName = fsUtils.unifyFileName(fileName);
+    module.fileName = filesystemUtils.unifyFileName(fileName);
     module.moduleName = getModuleName(module.fileName, options.basePath);
     module.objectName = getSafeObjectName(module.moduleName, options.prefix);
     module.code = code ? (code + '\n') : '';
@@ -16,7 +16,7 @@ var getModuleName = function(fileName, basePath) {
     if (basePath) {
         moduleName = moduleName.replace(new RegExp('^' + basePath), '');
     }
-    moduleName = fsUtils.withoutFileExtension(moduleName);
+    moduleName = filesystemUtils.withoutFileExtension(moduleName);
     return moduleName;
 };
 

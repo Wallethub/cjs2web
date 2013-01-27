@@ -1,8 +1,10 @@
 var path = require('path');
 var Q = require('q');
+var moduleSorter = require('./moduleSorter');
 
 var filesystemUtils = require('./filesystemUtils');
 var moduleFactory = require('./moduleFactory');
+var outputProcessor = require('./outputProcessor');
 
 var transform = function(fileName, options) {
     options = addDefaultOptions(options);
@@ -24,7 +26,9 @@ var transform = function(fileName, options) {
                 transformFilesRecursively();
             }
             else {
-                prepareOutput(fileName, options, modules).then(deferred.resolve);
+                processAndPersistOutput(fileName, modules, options)
+                    .then(deferred.resolve)
+                    .fail(deferred.reject);
             }
         });
         transformedNextFile.fail(deferred.reject);
@@ -83,33 +87,32 @@ var wrapModuleCode = function(module) {
         codeTemplates.wrapperEnd;
 };
 
-var prepareOutput = function(fileName, options, modules) {
-    var deferred = Q.defer();
-    var result = modules;
-    if (options.combine) {
-        result = combineModulesToSingleScript(result);
-        if (options.iife) {
-            result = wrapScriptInFunctionExpression(result);
-        }
+var processAndPersistOutput = function(fileName, modules, options) {
+    try {
+        modules = moduleSorter.sortByDependency(modules);
+    }
+    catch(error) {
+        return Q.reject(error);
+    }
+    var result = outputProcessor.process(modules, options);
+    if (options.output) {
+        result = filesystemUtils.writeFile(options.output, result);
+    }
+    else if (options.cli) {
+        console.log(result);
     }
     if (options.watch) {
-        var filesToWatch = modules.map(function(module) { return module.fileName; });
-        filesystemUtils.watchFiles(filesToWatch).then(function(changedFile) {
-            console.log(changedFile + ' changed');
-            transform(fileName, options);
-        });
+        watchFilesForChange(fileName, modules, options);
     }
-    var fileWrittenToDisk = options.output ? filesystemUtils.writeFile(options.output, result) : result;
-    Q.when(fileWrittenToDisk, deferred.resolve);
-    return deferred.promise;
+    return Q.when(result);
 };
 
-var combineModulesToSingleScript = function(modules) {
-    return modules.reduce(function(s, x) { return s + x.code + '\n'; }, '');
-};
-
-var wrapScriptInFunctionExpression = function(code) {
-    return '(function() {\n' + code + '}());';
+var watchFilesForChange = function(fileName, modules, options) {
+    var filesToWatch = modules.map(function(module) { return module.fileName; });
+    filesystemUtils.watchFiles(filesToWatch).then(function(changedFile) {
+        console.log(changedFile + ' changed');
+        transform(fileName, options);
+    });
 };
 
 var codeTemplates = {

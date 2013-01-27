@@ -10,7 +10,7 @@ describe('cjs2web.transform', function() {
 
     describe('given a common js module and an empty module prefix', function() {
 
-        var noPrefix = {prefix: ''};
+        var withNoPrefix = {prefix: ''};
 
         describe('which is placed at top level and has no dependencies', function() {
 
@@ -20,7 +20,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, '');
                 });
-                transform('a.js', noPrefix).then(function(modules) {
+                transform('a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -58,7 +58,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, '');
                 });
-                _modules = transform('path/to\\a.js', noPrefix).then(function(modules) {
+                _modules = transform('path/to\\a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -96,7 +96,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, '');
                 });
-                transform('foo.bar.js', noPrefix).then(function(modules) {
+                transform('foo.bar.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -121,7 +121,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, 'var hidden = "Hello module";');
                 });
-                _modules = transform('a.js', noPrefix).then(function(modules) {
+                _modules = transform('a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -169,7 +169,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, 'module.exports = {a: true, b: 1, c: function() {}};');
                 });
-                _modules = transform('a.js', noPrefix).then(function(modules) {
+                _modules = transform('a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -194,7 +194,7 @@ describe('cjs2web.transform', function() {
                         'exports.b = require("./b.js");' : 'module.exports = "b";';
                     callback(null, code);
                 });
-                _modules = transform('a.js', noPrefix).then(function(modules) {
+                _modules = transform('a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -236,7 +236,7 @@ describe('cjs2web.transform', function() {
                         'exports.b = require("./b.js");' : 'module.exports = "b";';
                     callback(null, code);
                 });
-                _modules = transform('path/to/a.js', noPrefix).then(function(modules) {
+                _modules = transform('path/to/a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -275,7 +275,7 @@ describe('cjs2web.transform', function() {
                         'exports.b = require("../b.js");' : 'module.exports = "b";';
                     callback(null, code);
                 });
-                _modules = transform('sub/a.js', noPrefix).then(function(modules) {
+                _modules = transform('sub/a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -313,7 +313,7 @@ describe('cjs2web.transform', function() {
                         callback(null, '');
                     }
                 });
-                _modules = transform('a.js', noPrefix).then(function(modules) {
+                _modules = transform('a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -343,7 +343,7 @@ describe('cjs2web.transform', function() {
                         'exports.b = require("./b");' : 'module.exports = "b";';
                     callback(null, code);
                 });
-                _modules = transform('a.js', noPrefix).then(function(modules) {
+                _modules = transform('a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -375,7 +375,7 @@ describe('cjs2web.transform', function() {
             });
 
             it('should throw an exception', function(done) {
-                transform('a.js', noPrefix).fail(function(error) {
+                transform('a.js', withNoPrefix).fail(function(error) {
                     expect(error).toBeDefined();
                     done();
                 });
@@ -396,7 +396,7 @@ describe('cjs2web.transform', function() {
                         callback(null, '')
                     }
                 });
-                transform('a.js', noPrefix).then(function(modules) {
+                transform('a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -425,7 +425,7 @@ describe('cjs2web.transform', function() {
                             break;
                     }
                 });
-                transform('a.js', noPrefix).then(function(modules) {
+                transform('a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -442,7 +442,7 @@ describe('cjs2web.transform', function() {
             });
         });
 
-        xdescribe('which requires two modules of which the second required also requires the first required', function() {
+        describe('which requires two modules of which the second also requires the first', function() {
 
             var _modules;
 
@@ -460,7 +460,7 @@ describe('cjs2web.transform', function() {
                             break;
                     }
                 });
-                transform('a.js', noPrefix).then(function(modules) {
+                transform('a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -477,6 +477,31 @@ describe('cjs2web.transform', function() {
             });
         });
 
+        describe('which contains a circular dependency', function() {
+
+            beforeEach(function() {
+                fs.hijack('readFile', function(filename, encoding, callback) {
+                    switch (filename){
+                        case 'a.js':
+                            callback(null, 'require("./b.js");');
+                            break;
+                        case 'b.js':
+                            callback(null, 'require("./a.js");');
+                            break;
+                    }
+                });
+
+            });
+
+            it('should fail', function(done) {
+                transform('a.js', withNoPrefix).fail(function(error) {
+                    expect(error).toBeDefined();
+                    done();
+                });
+            });
+        });
+
+
         describe('which does not make use of the exports object', function() {
 
             var _modules;
@@ -485,7 +510,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, '');
                 });
-                transform('a.js', noPrefix).then(function(modules) {
+                transform('a.js', withNoPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
