@@ -8,7 +8,9 @@ describe('cjs2web.transform', function() {
         fs.restore('readFile');
     });
 
-    describe('given a common js module', function() {
+    describe('given a common js module and an empty module prefix', function() {
+
+        var noPrefix = {prefix: ''};
 
         describe('which is placed at top level and has no dependencies', function() {
 
@@ -18,7 +20,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, '');
                 });
-                transform('a.js').then(function(modules) {
+                transform('a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -56,7 +58,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, '');
                 });
-                _modules = transform('path/to\\a.js').then(function(modules) {
+                _modules = transform('path/to\\a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -94,7 +96,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, '');
                 });
-                transform('foo.bar.js').then(function(modules) {
+                transform('foo.bar.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -119,7 +121,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, 'var hidden = "Hello module";');
                 });
-                _modules = transform('a.js').then(function(modules) {
+                _modules = transform('a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -144,7 +146,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, 'exports.a = true;exports.b = 1;exports.c = function(){};');
                 });
-                _modules = transform('a.js').then(function(modules) {
+                _modules = transform('a.js', {prefix: ''}).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -167,7 +169,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, 'module.exports = {a: true, b: 1, c: function() {}};');
                 });
-                _modules = transform('a.js').then(function(modules) {
+                _modules = transform('a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -192,7 +194,7 @@ describe('cjs2web.transform', function() {
                         'exports.b = require("./b.js");' : 'module.exports = "b";';
                     callback(null, code);
                 });
-                _modules = transform('a.js').then(function(modules) {
+                _modules = transform('a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -234,7 +236,7 @@ describe('cjs2web.transform', function() {
                         'exports.b = require("./b.js");' : 'module.exports = "b";';
                     callback(null, code);
                 });
-                _modules = transform('path/to/a.js').then(function(modules) {
+                _modules = transform('path/to/a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -273,7 +275,7 @@ describe('cjs2web.transform', function() {
                         'exports.b = require("../b.js");' : 'module.exports = "b";';
                     callback(null, code);
                 });
-                _modules = transform('sub/a.js').then(function(modules) {
+                _modules = transform('sub/a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -311,7 +313,7 @@ describe('cjs2web.transform', function() {
                         callback(null, '');
                     }
                 });
-                _modules = transform('a.js').then(function(modules) {
+                _modules = transform('a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -341,7 +343,7 @@ describe('cjs2web.transform', function() {
                         'exports.b = require("./b");' : 'module.exports = "b";';
                     callback(null, code);
                 });
-                _modules = transform('a.js').then(function(modules) {
+                _modules = transform('a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -373,7 +375,7 @@ describe('cjs2web.transform', function() {
             });
 
             it('should throw an exception', function(done) {
-                transform('a.js').fail(function(error) {
+                transform('a.js', noPrefix).fail(function(error) {
                     expect(error).toBeDefined();
                     done();
                 });
@@ -394,7 +396,7 @@ describe('cjs2web.transform', function() {
                         callback(null, '')
                     }
                 });
-                transform('a.js').then(function(modules) {
+                transform('a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -423,7 +425,7 @@ describe('cjs2web.transform', function() {
                             break;
                     }
                 });
-                transform('a.js').then(function(modules) {
+                transform('a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -458,7 +460,7 @@ describe('cjs2web.transform', function() {
                             break;
                     }
                 });
-                transform('a.js').then(function(modules) {
+                transform('a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -483,7 +485,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, '');
                 });
-                transform('a.js').then(function(modules) {
+                transform('a.js', noPrefix).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -539,12 +541,69 @@ describe('cjs2web.transform', function() {
                 });
             });
 
-            it('should add the module prefix to the main module', function() {
+            it('should add the given prefix to the main module´s object name', function() {
+                expect(_modules[1].objectName).toBe('module_a');
+            });
+
+            it('should not add the given prefix to the main module´s module name', function() {
+                expect(_modules[1].moduleName).toBe('a');
+            });
+
+            it('should contain the given prefix in the main module´s code', function() {
                 expect(_modules[1].code).toContain('module_a');
             });
 
-            it('should add the module prefix to the required module', function() {
+            it('should add the given prefix to the required module´s object name', function() {
+                expect(_modules[0].objectName).toBe('module_b');
+            });
+
+            it('should not add the given prefix to the required module´s module name', function() {
+                expect(_modules[0].moduleName).toBe('b');
+            });
+
+            it('should contain the given prefix in the required module´s code', function() {
                 expect(_modules[0].code).toContain('module_b');
+            });
+
+        });
+
+    });
+
+    describe('given a common js module without providing a module prefix', function() {
+
+        describe('where the module is placed on top level and requires a module in the same folder', function() {
+
+            var _modules;
+
+            beforeEach(function(done) {
+                fs.hijack('readFile', function(filename, encoding, callback) {
+                    if (filename.indexOf('a.js') > -1) {
+                        callback(null, 'require("./b.js");');
+                    }
+                    else {
+                        callback(null, '');
+                    }
+                });
+                transform('a.js').then(function(modules) {
+                    _modules = modules;
+                    done();
+                });
+            });
+
+            it('should add the default prefix to the main module´s object name', function() {
+                expect(_modules[1].objectName).toBe('__a');
+            });
+
+            it('should contain the default prefix in the main module´s code', function() {
+                expect(_modules[1].code).toContain('__a');
+            });
+
+            it('should add the default prefix to the required module´s object name', function() {
+                expect(_modules[0].objectName).toBe('__b');
+            });
+
+            it('should contain the default prefix in the required module´s code', function() {
+                expect(_modules[0].code).toContain('__b');
             });
 
         });
@@ -561,7 +620,7 @@ describe('cjs2web.transform', function() {
                 fs.hijack('readFile', function(filename, encoding, callback) {
                     callback(null, '');
                 });
-                transform('path/to/a.js', {basePath: 'path/to'}).then(function(modules) {
+                transform('path/to/a.js', {basePath: 'path/to', prefix: ''}).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -592,7 +651,7 @@ describe('cjs2web.transform', function() {
                         callback(null, '');
                     }
                 });
-                transform('path/to/a.js', {basePath: 'path/to'}).then(function(modules) {
+                transform('path/to/a.js', {basePath: 'path/to', prefix: ''}).then(function(modules) {
                     _modules = modules;
                     done();
                 });
@@ -625,7 +684,7 @@ describe('cjs2web.transform', function() {
                     callback(null, 'module.exports = "b";');
                 }
             });
-            transform('a.js', {combine: true}).then(function(output) {
+            transform('a.js', {combine: true, prefix: ''}).then(function(output) {
                 _output = output;
                 done();
             });
@@ -655,7 +714,7 @@ describe('cjs2web.transform', function() {
                     callback(null, 'module.exports = "b";');
                 }
             });
-            transform('a.js', {combine: true, iife: true}).then(function(output) {
+            transform('a.js', {combine: true, iife: true, prefix: ''}).then(function(output) {
                 _output = output;
                 done();
             });
@@ -682,7 +741,7 @@ describe('cjs2web.transform', function() {
                 _spy(filename, content);
                 callback();
             });
-            transform('a.js', {combine: true, output: 'output.js'}).then(function(output) {
+            transform('a.js', {combine: true, output: 'output.js', prefix: ''}).then(function(output) {
                 _output = output;
                 done();
             });

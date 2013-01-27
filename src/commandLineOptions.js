@@ -13,7 +13,8 @@ var options = optimist
     .options('p', {
         alias: 'prefix',
         describe: 'prefix to add to the generated object names',
-        string: true
+        string: true,
+        default: '__'
     })
     .options('c', {
         alias: 'combine',

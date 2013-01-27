@@ -58,7 +58,7 @@ cjs2web <filename>
 
 Options:
   -b, --basePath  base path to exclude from generated object names                 [string]
-  -p, --prefix    prefix to add to the generated object names                      [string]
+  -p, --prefix    prefix to add to the generated object names                      [string] [default: "__"]
   -c, --combine   combines all transformed modules to one script output            [boolean]
   -i, --iife      wrap code in an immediately invoked function expression          [boolean]
   -o, --output    filename to write the generated output to                        [string]
@@ -74,7 +74,8 @@ can only be enabled in combination with *combine*.
 
 #### Prefix
 
-The *prefix* option is very important. Consider the following example:
+The *prefix* option is very important and can lead to unexpected results if not provided.
+There it defaults to "__". Consider the following example:
 
 ```javascript
 // == index.js ==
@@ -84,7 +85,7 @@ helper.doSomething();
 exports.doSomething = function() { /*...*/ };
 ```
 
-Without providing a *prefix* the transformation of the above would result in:
+Without a *prefix* the transformation of the above would result in:
 
 ```javascript
 var helper = (function(module) {

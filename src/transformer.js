@@ -35,7 +35,7 @@ var transform = function(fileName, options) {
 
 var addDefaultOptions = function(options) {
     options = options || {};
-    options.prefix = options.prefix != null ? options.prefix : '';
+    options.prefix = options.prefix != null ? options.prefix : '__';
     options.basePath = filesystemUtils.unifyPath(options.basePath != null ? options.basePath : '');
     options.combine = options.combine != null ? options.combine : false;
     options.iife = options.iife != null ? options.iife : false;
