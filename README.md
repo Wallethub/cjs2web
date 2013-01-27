@@ -75,7 +75,7 @@ can only be enabled in combination with *combine*.
 #### Prefix
 
 The *prefix* option is very important and can lead to unexpected results if not provided.
-There it defaults to "__". Consider the following example:
+Therefore it defaults to "__". Consider the following example:
 
 ```javascript
 // == index.js ==
