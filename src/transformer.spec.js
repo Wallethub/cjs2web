@@ -88,7 +88,7 @@ describe('cjs2web.transform', function() {
 
         });
 
-        describe('which has dots in its file name', function() {
+        describe('which has a dot in its file name', function() {
 
             var _modules;
 
@@ -102,7 +102,32 @@ describe('cjs2web.transform', function() {
                 });
             });
 
-            it('should return the correct object name where dots are replaced with $', function() {
+            it('should return the correct object name where the dot is replaced with $', function() {
+                expect(_modules[0].objectName).toBe('foo$bar');
+            });
+
+            it('should return code creating a correctly named object', function() {
+                eval(_modules[0].code);
+                expect(foo$bar).toBeDefined();
+            });
+
+        });
+
+        describe('which has a hyphen in its file name', function() {
+
+            var _modules;
+
+            beforeEach(function(done) {
+                fs.hijack('readFile', function(filename, encoding, callback) {
+                    callback(null, '');
+                });
+                transform('foo-bar.js', withNoPrefix).then(function(modules) {
+                    _modules = modules;
+                    done();
+                });
+            });
+
+            it('should return the correct object name where the hyphen is replaced with $', function() {
                 expect(_modules[0].objectName).toBe('foo$bar');
             });
 

@@ -1,10 +1,10 @@
 var process = function(modules, options) {
-    var result = modules;
-    if (options.combine) {
-        result = combineModulesToSingleScript(result);
-        if (options.iife) {
-            result = wrapScriptInFunctionExpression(result);
-        }
+    if (!options.combine) {
+        return modules;
+    }
+    var result = combineModulesToSingleScript(modules);
+    if (options.iife) {
+        result = wrapScriptInFunctionExpression(result);
     }
     return result;
 };

@@ -21,7 +21,7 @@ var getModuleName = function(fileName, basePath) {
 };
 
 var getSafeObjectName = function(moduleName, prefix) {
-    return prefix + moduleName.replace(/\//g, '_').replace(/\./g, '$');
+    return prefix + moduleName.replace(/\//g, '_').replace(/\.|-/g, '$');
 };
 
 exports.createModule = createModule;

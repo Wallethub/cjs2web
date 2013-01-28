@@ -12,10 +12,10 @@ var transform = function(fileName, options) {
     var modules = [], filesProcessed = [];
     var filesToProcess = [fileName];
     var transformFilesRecursively = function() {
-        var currentFile = filesToProcess.shift();
+        var currentFile = filesToProcess.pop();
         var transformedNextFile = transformSingleFile(currentFile, options);
         transformedNextFile.then(function(module) {
-            modules.unshift(module);
+            modules.push(module);
             filesProcessed.push(currentFile);
             var dependentFiles = module.dependencies.map(function(x) { return x.fileName; });
             var dependentFilesToProcess = dependentFiles.filter(function(name) {
