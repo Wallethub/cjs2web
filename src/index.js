@@ -6,9 +6,10 @@ var transformer = require('./transformer');
 if (require.main == module) {
     var options = require('./commandLineOptions.js');
     options.cli = true;
-    var filename = options._[0];
-    if (filename) {
-        var transformed = transformer.transform(filename, options);
+    var fileName = options._[0];
+    if (fileName) {
+        options.fileName = fileName;
+        var transformed = transformer.transform(options);
         transformed.fail(function(error) {
             console.log(error);
         });

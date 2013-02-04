@@ -8,6 +8,7 @@ var createModule = function(fileName, code, options) {
     module.moduleName = getModuleName(module.fileName, options.basePath);
     module.objectName = getSafeObjectName(module.moduleName, options.prefix);
     module.code = code ? (code + '\n') : '';
+    module.main = fileName == options.fileName;
     return module;
 };
 

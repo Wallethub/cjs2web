@@ -69,8 +69,8 @@ Options:
 
 Normally you will want to enable the *combine* option.
 Otherwise the transformation output will not be a string of code but raw module data.
-The *iife* option wraps your code to reduce global variables and
-can only be enabled in combination with *combine*.
+The *iife* option wraps your code in an immediately invoked function expression
+to reduce global variables and can only be enabled in combination with *combine*.
 
 #### Prefix
 
@@ -78,10 +78,10 @@ The *prefix* option is very important and can lead to unexpected results if not 
 Therefore it defaults to "__". Consider the following example:
 
 ```javascript
-// == index.js ==
+// index.js
 var helper = require('./helper');
 helper.doSomething();
-// == helper.js ==
+// helper.js
 exports.doSomething = function() { /*...*/ };
 ```
 
@@ -116,14 +116,14 @@ re-execute the transformation whenever one of these files changes.
 
 ### Code usage
 
-The `transform` function accepts the filename and an optional options object.
-Option names are the same as the explicit parameter names of the command line tool.
+The `transform` function accepts an options object of which `fileName` is the only mandatory property.
+Other option properties have the same names as the explicit parameters of the command line tool.
 The return value is a Deferred object.
 
 ```javascript
 var cjs2web = require('cjs2web');
 
-cjs2web.transform(filename, options).then(function(result) {
+cjs2web.transform(options).then(function(result) {
   // do something with result
 });
 ```
@@ -171,7 +171,7 @@ var cjs_calculation_sum = (function(module) {
     return module.exports;
 }({exports: {}}));
 
-var index = (function(module) {
+(function(module) {
     var two = cjs_numbers_two;
     var three = cjs_numbers_three;
     var sum = cjs_calculation_sum;

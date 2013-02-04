@@ -6,11 +6,12 @@ var filesystemUtils = require('./filesystemUtils');
 var moduleFactory = require('./moduleFactory');
 var outputProcessor = require('./outputProcessor');
 
-var transform = function(fileName, options) {
+var transform = function(options) {
+    if (arguments.length == 0) return Q.resolve(exampleOptions);
     options = addDefaultOptions(options);
     var deferred = Q.defer();
     var modules = [], filesProcessed = [];
-    var filesToProcess = [fileName];
+    var filesToProcess = [options.fileName];
     var transformFilesRecursively = function() {
         var currentFile = filesToProcess.pop();
         var transformedNextFile = transformSingleFile(currentFile, options);
@@ -26,7 +27,7 @@ var transform = function(fileName, options) {
                 transformFilesRecursively();
             }
             else {
-                processAndPersistOutput(fileName, modules, options)
+                processAndPersistOutput(modules, options)
                     .then(deferred.resolve)
                     .fail(deferred.reject);
             }
@@ -78,16 +79,13 @@ var dependencyAlreadyAdded = function(dependencies, dependency) {
 };
 
 var wrapModuleCode = function(module) {
-    var variableDefinitions = exportsRegex.test(module.code) ? codeTemplates.exportsDefinition : '';
-    module.code = 'var ' + module.objectName + ' = ' +
-        codeTemplates.wrapperStart +
-        variableDefinitions +
-        module.code +
-        codeTemplates.returnValue +
-        codeTemplates.wrapperEnd;
+    var exportsDefinition = exportsRegex.test(module.code) ? codeTemplates.exportsDefinition : '';
+    var moduleFactory = exportsDefinition + module.code + codeTemplates.returnValue;
+    var moduleAssignment = 'var ' + module.objectName + ' = ';
+    module.code = moduleAssignment + '(function(module) {\n' + moduleFactory + '\n}({exports: {}}));';
 };
 
-var processAndPersistOutput = function(fileName, modules, options) {
+var processAndPersistOutput = function(modules, options) {
     try {
         modules = moduleSorter.sortByDependency(modules);
     }
@@ -102,27 +100,37 @@ var processAndPersistOutput = function(fileName, modules, options) {
         console.log(result);
     }
     if (options.watch) {
-        watchFilesForChange(fileName, modules, options);
+        watchFilesForChange(modules, options);
     }
     return Q.when(result);
 };
 
-var watchFilesForChange = function(fileName, modules, options) {
+var watchFilesForChange = function(modules, options) {
     var filesToWatch = modules.map(function(module) { return module.fileName; });
     filesystemUtils.watchFiles(filesToWatch).then(function(changedFile) {
         console.log(changedFile + ' changed');
-        transform(fileName, options);
+        transform(options);
     });
 };
 
 var codeTemplates = {
-    wrapperStart: '(function(module) {\n\n',
     exportsDefinition: 'var exports = module.exports;\n',
-    returnValue: 'return module.exports;\n',
-    wrapperEnd: '}({exports: {}}));'
+    returnValue: 'return module.exports;\n'
 };
 
 var requireRegex = /require\s*\(\s*(('(.*?)')|("(.*?)"))\s*\)/g;
 var exportsRegex = /exports(\.|\[).*/i;
+
+var exampleOptions = {
+    fileName: "String",
+    basePath: "String",
+    prefix: "String",
+    output: "String",
+    iife: "Boolean",
+    combine: "Boolean",
+    watch: "Boolean"
+};
+
+
 
 exports.transform = transform;
