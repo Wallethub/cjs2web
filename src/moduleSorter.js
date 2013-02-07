@@ -1,23 +1,15 @@
-var sortByDependency = function(modules) {
-    modules = modules.slice(0);
-    modules.sort(function(first, second) {
-        if (first.dependencies.length != second.dependencies.length) {
-            return first.dependencies.length > second.dependencies.length ? 1 : -1;
-        }
-        else {
-            var firstDependsOnSecond = dependsOn(first, second);
-            var secondDependsOnFirst = dependsOn(second, first);
-            if (firstDependsOnSecond && secondDependsOnFirst) {
-                throw new Error('circular dependency');
-            }
-            return firstDependsOnSecond ? 1 : -1;
-        }
-    });
-    return modules;
-};
+var topologicalSort =
+    require('../vendor/javascript-topological-sort/topological-sort').topologicalSort;
 
-var dependsOn = function(module, dependency) {
-    return module.dependencies.some(function(x) { return x.moduleName == dependency.moduleName; })
+var sortByDependency = function(modules) {
+    var indices = {};
+    modules.forEach(function(x, i) { indices[x.moduleName] = i; });
+    var graph = modules.map(function(x) {
+        var edges = x.dependencies.map(function(y) { return indices[y.moduleName]; });
+        return {edges: edges};
+    });
+    var sortedIndices = topologicalSort(graph).reverse();
+    return sortedIndices.map(function(i) { return modules[i]; });
 };
 
 exports.sortByDependency = sortByDependency;

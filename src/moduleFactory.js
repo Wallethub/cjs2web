@@ -17,7 +17,7 @@ var getModuleName = function(fileName, basePath) {
     if (basePath) {
         moduleName = moduleName.replace(new RegExp('^' + basePath), '');
     }
-    moduleName = filesystemUtils.withoutFileExtension(moduleName);
+    moduleName = filesystemUtils.withoutJsExtension(moduleName);
     return moduleName;
 };
 

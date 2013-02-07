@@ -1,2 +1,2 @@
-var a = require('x.js');
-var b = require('y.js');
+var x = require('./x');
+var y = require('./y');

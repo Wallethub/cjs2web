@@ -40,8 +40,8 @@ var watchFiles = function(fileNames) {
     return deferred.promise;
 };
 
-var withoutFileExtension = function(fileName) {
-    return fileName.substring(0, fileName.length - path.extname(fileName).length);
+var withoutJsExtension = function(fileName) {
+    return fileName.replace(jsExtensionRegex, '');
 };
 
 var unifyPath = function(path) {
@@ -55,7 +55,7 @@ var unifyPath = function(path) {
 var unifyFileName = function(fileName) {
     fileName = unifySlashes(fileName);
     fileName = fileName.replace(currentDirectoryRegex, '');
-    fileName = fileName + (!path.extname(fileName) ? '.js' : '');
+    fileName = withoutJsExtension(fileName) + '.js';
     return fileName;
 };
 
@@ -63,6 +63,7 @@ var unifySlashes = function(input) {
     return input.replace(/\\/g, '/');
 };
 
+var jsExtensionRegex = /\.js$/i;
 var currentDirectoryRegex = /^\.?\//;
 
 exports.unifyPath = unifyPath;
@@ -70,4 +71,4 @@ exports.unifyFileName = unifyFileName;
 exports.readFile = readFile;
 exports.writeFile = writeFile;
 exports.watchFiles = watchFiles;
-exports.withoutFileExtension = withoutFileExtension;
+exports.withoutJsExtension = withoutJsExtension;

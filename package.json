@@ -1,6 +1,6 @@
 {
     "name": "cjs2web",
-    "version": "0.8.9",
+    "version": "0.9.10",
     "description": "Transform CommonJS modules to a web browser suitable format",
     "maintainers": [
         {

@@ -1,6 +1,6 @@
 /**
  * @license
- * cjs2web - Transform CommonJS modules to a web browser suitable format - version 0.8.9
+ * cjs2web - Transform CommonJS modules to a web browser suitable format - version 0.9.10
  * Copyright 2013, Alex Lawrence
  * Licensed under the MIT license.
  * http://www.opensource.org/licenses/MIT

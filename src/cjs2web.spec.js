@@ -12,9 +12,7 @@ describe('cjs2web.transform', function() {
         fs.restore('readFile');
     });
 
-    describe('given a common js module and an empty module prefix', function() {
-
-        var withNoPrefix = {prefix: ''};
+    describe('given a common js module', function() {
 
         describe('which is placed at top level and has no dependencies', function() {
 
@@ -518,6 +516,41 @@ describe('cjs2web.transform', function() {
             });
         });
 
+        describe('which requires a module which requires two other modules', function() {
+
+            var _modules;
+
+            beforeEach(function(done) {
+                fs.hijack('readFile', function(filename, encoding, callback) {
+                    switch (filename){
+                        case 'a.js':
+                            callback(null, 'require("./b.js");');
+                            break;
+                        case 'b.js':
+                            callback(null, 'require("./c.js");require("./d.js");');
+                            break;
+                        case 'c.js':
+                            callback(null, '');
+                            break;
+                        case 'd.js':
+                            callback(null, '');
+                            break;
+                    }
+                });
+                transformWithNoPrefix({fileName: 'a.js'}).then(function(modules) {
+                    _modules = modules;
+                    done();
+                });
+            });
+
+            it('should return a list of modules in the correct optimized order', function() {
+                expect(_modules[0].moduleName).toMatch(/[cd]/);
+                expect(_modules[1].moduleName).toMatch(/[cd]/);
+                expect(_modules[2].moduleName).toBe('b');
+                expect(_modules[3].moduleName).toBe('a');
+            });
+        });
+
         describe('which contains a circular dependency', function() {
 
             beforeEach(function() {
@@ -568,7 +601,12 @@ describe('cjs2web.transform', function() {
 
             beforeEach(function(done) {
                 fs.hijack('readFile', function(filename, encoding, callback) {
-                    callback(null, 'require("./b.js");require("./b.js");');
+                    if (filename == 'a.js') {
+                        callback(null, 'require("./b.js");require("./b.js");');
+                    }
+                    else {
+                        callback(null, '');
+                    }
                 });
                 transformWithNoPrefix({fileName: 'a.js'}).then(function(modules) {
                     _modules = modules;
@@ -580,6 +618,39 @@ describe('cjs2web.transform', function() {
                 expect(_modules.length).toBe(2);
                 expect(_modules[0].moduleName).toBe('b');
                 expect(_modules[1].moduleName).toBe('a');
+            });
+
+        });
+
+        describe('which requires a module with a dot in its filename but not passing the js extension', function() {
+
+            var _modules;
+
+            beforeEach(function(done) {
+                fs.hijack('readFile', function(filename, encoding, callback) {
+                    if (filename == 'a.js') {
+                        callback(null, 'require("./sub/b.spec");');
+                    }
+                    else if (filename == 'sub/b.spec.js') {
+                        callback(null, '');
+                    }
+                    else {
+                        callback('file not found');
+                    }
+                });
+                transformWithNoPrefix({fileName: 'a.js'}).then(function(modules) {
+                    _modules = modules;
+                    done();
+                });
+            });
+
+            it('should load the required module using its correct file name', function() {
+                expect(_modules.length).toBe(2);
+                expect(_modules[0].fileName).toBe('sub/b.spec.js');
+            });
+
+            it('should return the correct module id for the required module', function() {
+                expect(_modules[0].moduleName).toBe('sub/b.spec');
             });
 
         });
