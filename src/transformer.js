@@ -122,8 +122,11 @@ var processAndPersistOutput = function(modules, options) {
 var watchFilesForChange = function(modules, options) {
     var filesToWatch = modules.map(function(module) { return module.fileName; });
     filesystemUtils.watchFiles(filesToWatch).then(function(changedFile) {
-        console.log(changedFile + ' changed');
-        transform(options);
+        console.log('cjs2web: ' + changedFile + ' changed, re-executing');
+        transform(options).fail(function() {
+            console.log('cjs2web: encountered error, waiting for next change');
+            watchFilesForChange(modules, options);
+        });
     });
 };
 
