@@ -79,10 +79,24 @@ var dependencyAlreadyAdded = function(dependencies, dependency) {
 };
 
 var wrapModuleCode = function(module) {
-    var exportsDefinition = exportsRegex.test(module.code) ? codeTemplates.exportsDefinition : '';
-    var moduleFactory = exportsDefinition + module.code + codeTemplates.returnValue;
+    module.code = addExportsShortcutIfUsed(module.code);
+    var moduleFactory = module.code + codeTemplates.returnStatement;
     var moduleAssignment = 'var ' + module.objectName + ' = ';
     module.code = moduleAssignment + '(function(module) {\n' + moduleFactory + '\n}({exports: {}}));';
+};
+
+var addExportsShortcutIfUsed = function(code) {
+    if (code.match(exportsRegex)) {
+        if (!code.match(strictModeRegex)) {
+            return codeTemplates.exportsDefinition + code;
+        }
+        return code.replace(strictModeRegex, function(match) {
+            var sanitizedUseStrict = '\'use strict\';\n';
+            if (match.indexOf('"') > -1) sanitizedUseStrict = sanitizedUseStrict.replace(/'/g, '"');
+            return sanitizedUseStrict + codeTemplates.exportsDefinition;
+        });
+    }
+    return code;
 };
 
 var processAndPersistOutput = function(modules, options) {
@@ -114,12 +128,14 @@ var watchFilesForChange = function(modules, options) {
 };
 
 var codeTemplates = {
+    strictMode: '\'use strict\';\n',
     exportsDefinition: 'var exports = module.exports;\n',
-    returnValue: 'return module.exports;\n'
+    returnStatement: 'return module.exports;\n'
 };
 
 var requireRegex = /require\s*\(\s*(('(.*?)')|("(.*?)"))\s*\)/g;
 var exportsRegex = /exports(\.|\[).*/i;
+var strictModeRegex = /("use strict"|'use strict')\s*;?\n?/;
 
 var exampleOptions = {
     fileName: "String",

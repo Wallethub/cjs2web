@@ -175,7 +175,10 @@ describe('cjs2web.transform', function() {
 
             beforeEach(function(done) {
                 fs.hijack('readFile', function(filename, encoding, callback) {
-                    callback(null, 'exports.a = true;exports.b = 1;exports.c = function(){};');
+                    callback(null,
+                        'exports.a = true;' +
+                        'exports.b = 1;' +
+                        'exports.c = function(){};');
                 });
                 _modules = transformWithNoPrefix({fileName: 'a.js'}).then(function(modules) {
                     _modules = modules;
@@ -651,6 +654,35 @@ describe('cjs2web.transform', function() {
 
             it('should return the correct module id for the required module', function() {
                 expect(_modules[0].moduleName).toBe('sub/b.spec');
+            });
+
+        });
+
+        describe('which enables ES5 Strict Mode and assigns members to the exports variable', function() {
+
+            var _modules;
+
+            beforeEach(function(done) {
+                fs.hijack('readFile', function(filename, encoding, callback) {
+                    if (filename == 'a.js') {
+                        callback(null,
+                            ' \n "use strict" \n' +
+                            'exports.foo = "bar"; \n' +
+                            'require("./b.js");');
+                    }
+                    if (filename == 'b.js') {
+                        callback(null, '/* comment */\'use strict\';exports.foo = "bar";');
+                    }
+                });
+                transformWithNoPrefix({fileName: 'a.js'}).then(function(modules) {
+                    _modules = modules;
+                    done();
+                });
+            });
+
+            it('should add the exports variable definition after the "use strict" string literal', function() {
+                expect(_modules[1].code).toMatch(/"use strict";\nvar exports/);
+                expect(_modules[0].code).toMatch(/'use strict';\nvar exports/);
             });
 
         });
