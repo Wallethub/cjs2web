@@ -144,6 +144,56 @@ describe('cjs2web.transform', function() {
 
         });
 
+        describe('which has a underscore in its file name', function() {
+
+            var _modules;
+
+            beforeEach(function(done) {
+                fs.hijack('readFile', function(filename, encoding, callback) {
+                    callback(null, '');
+                });
+                transformWithNoPrefix({fileName: 'foo_bar.js'}).then(function(modules) {
+                    _modules = modules;
+                    done();
+                });
+            });
+
+            it('should return the correct object name where the underscore is not replaced', function() {
+                expect(_modules[0].objectName).toBe('foo_bar');
+            });
+
+            it('should return code creating a correctly named object', function() {
+                eval(_modules[0].code);
+                expect(foo_bar).toBeDefined();
+            });
+
+        });
+
+        describe('which has a whitespace in its file name', function() {
+
+            var _modules;
+
+            beforeEach(function(done) {
+                fs.hijack('readFile', function(filename, encoding, callback) {
+                    callback(null, '');
+                });
+                transformWithNoPrefix({fileName: 'foo bar.js'}).then(function(modules) {
+                    _modules = modules;
+                    done();
+                });
+            });
+
+            it('should return the correct object name where the whitespace is replaced with $', function() {
+                expect(_modules[0].objectName).toBe('foo$bar');
+            });
+
+            it('should return code creating a correctly named object', function() {
+                eval(_modules[0].code);
+                expect(foo$bar).toBeDefined();
+            });
+
+        });
+
         describe('which contains a private (string) variable', function() {
 
             var _modules;

@@ -11,7 +11,9 @@ if (require.main == module) {
         options.fileName = fileName;
         var transformed = transformer.transform(options);
         transformed.fail(function(error) {
-            console.log(error);
+            process.nextTick(function() {
+                throw error;
+            });
         });
     }
 }
