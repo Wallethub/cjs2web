@@ -24,13 +24,13 @@ This results in code which contains almost no overhead and can also be minified 
 
 **Supported features**:
 
-* Using `require()` for local modules
+* Using `require()` for local scripts
 * Assigning members to `exports`
 * Assigning values to `module.exports`
 
 **Unsupported features** (now and probably in the future):
 
-* Using `require()` for third party modules
+* Using `require()` for modules from node_modules
 * Using `require()` for core node modules
 * Using `require()` for files which do not have a "js" extension
 * `this` refers to window, not to `module.exports`
