@@ -1,3 +1,5 @@
+### :heavy_exclamation_mark: This module is DEPRECATED :heavy_exclamation_mark:
+
 # cjs2web [![Build Status](https://travis-ci.org/alexlawrence/cjs2web.png?branch=master)](undefined)
 
 Transform CommonJS modules to a web browser suitable format with minimal code overhead.
